@@ -24,7 +24,7 @@ class CustomSubscriber: Subscriber {
 }
 
 // A PassthroughSubject can be used both as Publisher and Subscriber
-// see line 37.
+// see line 42.
 let intPublisher = PassthroughSubject<Int, Never>()
 var cancellable = Set<AnyCancellable>()
 // AnySubscriber is rarely used, only when we want to customize behavior

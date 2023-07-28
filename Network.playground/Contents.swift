@@ -16,7 +16,7 @@ struct MobileResponse: Codable, Equatable {
 }
 
 func fetchMovies() -> AnyPublisher<MobileResponse, Error> {
-    let url = URL(string: "https://api.themoviedb.org/3/movie/upcoming?api_key=\(apiKey)")!)!
+    let url = URL(string: "https://api.themoviedb.org/3/movie/upcoming?api_key=123")!
     
     return URLSession
         .shared

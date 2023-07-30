@@ -2,7 +2,9 @@ import SwiftUI
 import Combine
 import Foundation
 
-struct MobileResponse: Codable, Equatable {
+let apiKey = ""
+
+struct MovieResponse: Codable, Equatable {
     let movies: [Movie]
         struct Movie: Codable, Equatable {
             let title: String
@@ -15,19 +17,36 @@ struct MobileResponse: Codable, Equatable {
         }
 }
 
-func fetchMovies() -> AnyPublisher<MobileResponse, Error> {
+// As AnyPublisher
+func fetchMovies() -> AnyPublisher<MovieResponse, Error> {
     let url = URL(string: "https://api.themoviedb.org/3/movie/upcoming?api_key=123")!
     
     return URLSession
         .shared
         .dataTaskPublisher(for: url)
         .map(\.data)
-        .decode(type: MobileResponse.self, decoder: JSONDecoder())
+    //        .tryMap { data in
+    //            let decoded = try jsonDecoder.decode(MovieResponse.self, from: data)
+    //            return decoded
+    //        }
+        .decode(type: MovieResponse.self, decoder: JSONDecoder())
         .eraseToAnyPublisher()
 }
 
+// As some Publisher
+func searchMovies(for query: String) -> some Publisher<MovieResponse, Error> {
+    let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+    let url = URL(string: "https://api.themoviedb.org/3/search/movie?api_key=\(apiKey)&query=\(encodedQuery!)")!
+
+    return URLSession
+        .shared
+        .dataTaskPublisher(for: url)
+        .map { $0.data }
+        .decode(type: MovieResponse.self, decoder: JSONDecoder())
+}
+
 final class MovieViewModel: ObservableObject {
-    @Published var movies: [MobileResponse.Movie] = []
+    @Published var movies: [MovieResponse.Movie] = []
     
     var cancellables = Set<AnyCancellable>()
     

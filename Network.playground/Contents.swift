@@ -18,19 +18,34 @@ struct MovieResponse: Codable, Equatable {
 }
 
 // As AnyPublisher
-func fetchMovies() -> AnyPublisher<MovieResponse, Error> {
-    let url = URL(string: "https://api.themoviedb.org/3/movie/upcoming?api_key=123")!
-    
-    return URLSession
-        .shared
-        .dataTaskPublisher(for: url)
-        .map(\.data)
-    //        .tryMap { data in
-    //            let decoded = try jsonDecoder.decode(MovieResponse.self, from: data)
-    //            return decoded
-    //        }
-        .decode(type: MovieResponse.self, decoder: JSONDecoder())
-        .eraseToAnyPublisher()
+protocol Service {
+    func fetchMovies() -> AnyPublisher<MovieResponse, Error>
+}
+
+class MoviesService: Service {
+    func fetchMovies() -> AnyPublisher<MovieResponse, Error> {
+        let url = URL(string: "https://api.themoviedb.org/3/movie/upcoming?api_key=123")!
+        
+        return URLSession
+            .shared
+            .dataTaskPublisher(for: url)
+            .map(\.data)
+        //        .tryMap { data in
+        //            let decoded = try jsonDecoder.decode(MovieResponse.self, from: data)
+        //            return decoded
+        //        }
+            .decode(type: MovieResponse.self, decoder: JSONDecoder())
+            .eraseToAnyPublisher()
+    }
+}
+
+// Mock for test
+class MockMoviesService: Service {
+    func fetchMovies() -> AnyPublisher<MovieResponse, Error> {
+        Just(MovieResponse(movies: []))
+            .setFailureType(to: Error.self)
+            .eraseToAnyPublisher()
+    }
 }
 
 // As some Publisher
@@ -49,9 +64,14 @@ final class MovieViewModel: ObservableObject {
     @Published var movies: [MovieResponse.Movie] = []
     
     var cancellables = Set<AnyCancellable>()
+    let service: Service
+    
+    init(service: Service = MoviesService()) {
+        self.service = service
+    }
     
     func fetchData() {
-        fetchMovies()
+        service.fetchMovies()
             .map(\.movies)
             .receive(on: DispatchQueue.main)
             .replaceError(with: [])

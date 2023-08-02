@@ -74,8 +74,10 @@ final class MovieViewModel: ObservableObject {
         service.fetchMovies()
             .map(\.movies)
             .receive(on: DispatchQueue.main)
-            .replaceError(with: [])
-            .print()
+            .catch { error in
+                print("An error has occurred, which is ", error)
+                return Just([MovieResponse.Movie(title: "", releaseYear: 0)])
+            }
             .assign(to: \.movies, on: self)
             .store(in: &cancellables)
     }
